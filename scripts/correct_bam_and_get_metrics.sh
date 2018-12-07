@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -xue
+set -xueo pipefail
 
 ########################################################################################################
 # PART 1: From raw basecalls to GATK-ready reads
@@ -26,7 +26,8 @@ sanger_core_ref=$2
 mem=$3
 
 # untar ref
-mkdir ref && tar xzf $sanger_core_ref -C ref --strip-components 1
+mkdir -p ref
+tar xzf $sanger_core_ref -C ref --strip-components 1
 path_ref="ref/genome.fa"
 
 path_GATK="/opt/GenomeAnalysisTK.jar" # path to GATK jar
@@ -37,16 +38,29 @@ tmp_bam_prefix=$(basename $in_bam)
 java_mem_tag="-Xmx${mem}g"
 
 # expected outputs:
+
 ## bam and index
 reheadered_bam=${tmp_bam_prefix}.reheader.bam
-# ${tmp_bam_prefix}.reheader.bam.bai
+# secondary file: ${tmp_bam_prefix}.reheader.bam.bai
+
 ## metrics_files
-verifybamID_out=${tmp_bam_prefix}.verifybamID_out.txt
+verifybamID_out=${tmp_bam_prefix}.verifybamID_out
+# secondary file: ${tmp_bam_prefix}.verifybamID_out.depthSM
+# secondary file: ${tmp_bam_prefix}.verifybamID_out.log
+# secondary file: ${tmp_bam_prefix}.verifybamID_out.selfSM
 flag_stats_out=${tmp_bam_prefix}.flag_stats.txt
 wgs_metrics_out=${tmp_bam_prefix}.wgs_metrics.txt
-multiple_metrics_out=${tmp_bam_prefix}.multiple_metrics.txt
+multiple_metrics_out=${tmp_bam_prefix}.multiple_metrics
+# secondary file: ${tmp_bam_prefix}.multiple_metrics.alignment_summary_metrics
+# secondary file: ${tmp_bam_prefix}.multiple_metrics..gc_bias.detail_metrics
+# secondary file: ${tmp_bam_prefix}.multiple_metrics..gc_bias.pdf
+# secondary file: ${tmp_bam_prefix}.multiple_metrics..gc_bias.summary_metrics
+# secondary file: ${tmp_bam_prefix}.multiple_metrics..insert_size_histogram.pdf
+# secondary file: ${tmp_bam_prefix}.multiple_metrics..insert_size_metrics
+
 ## the log:
 samplelog=${tmp_bam_prefix}.eze_gatk_part_1_correct.log
+echo "$(date '+%d/%m/%y_%H:%M:%S'), Wake up to work" > "$samplelog"
 
 ###################################################
 # Mark Duplicates
@@ -79,6 +93,7 @@ echo "$(date '+%d/%m/%y_%H:%M:%S'),---Finished cleaning BAM---" >> "$samplelog"
 echo "$(date '+%d/%m/%y_%H:%M:%S'),---Starting FixMateInformation---" >> "$samplelog"
 java $java_mem_tag -Djava.io.tmpdir=/tmp \
 -jar $path_picard FixMateInformation \
+VALIDATION_STRINGENCY=LENIENT \
 I=${tmp_bam_prefix}.clean.bam \
 O=${tmp_bam_prefix}.fixed.bam \
 TMP_DIR=/tmp >> "$samplelog"
@@ -114,6 +129,7 @@ echo "$(date '+%d/%m/%y_%H:%M:%S'), Finished generating BAM index" >> "$samplelo
 echo "$(date '+%d/%m/%y_%H:%M:%S'),---Validating BAM---" >> "$samplelog"
 java $java_mem_tag -Djava.io.tmpdir=/tmp \
 -jar $path_picard ValidateSamFile \
+VALIDATION_STRINGENCY=LENIENT \
 I=$reheadered_bam \
 MODE=SUMMARY >> "$samplelog"
 echo "$(date '+%d/%m/%y_%H:%M:%S'),---Finished BAM Validation---" >> "$samplelog"
@@ -144,6 +160,7 @@ echo "$(date '+%d/%m/%y_%H:%M:%S'), Finished samtools flagstat" >> "$samplelog"
 echo "$(date '+%d/%m/%y_%H:%M:%S'),---Starting Picard CollectWgsMetrics---" >> "$samplelog"
 java $java_mem_tag -Djava.io.tmpdir=/tmp \
 -jar $path_picard CollectWgsMetrics \
+VALIDATION_STRINGENCY=LENIENT \
 R=$path_ref \
 I=$reheadered_bam \
 O=$wgs_metrics_out \
@@ -159,6 +176,7 @@ echo "$(date '+%d/%m/%y_%H:%M:%S'),---Collecting multiple metrics---" >> "$sampl
 
 java $java_mem_tag -Djava.io.tmpdir=/tmp \
 -jar $path_picard CollectMultipleMetrics \
+VALIDATION_STRINGENCY=LENIENT \
 R=$path_ref \
 I=$reheadered_bam \
 O=$multiple_metrics_out \
