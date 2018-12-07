@@ -52,11 +52,11 @@ flag_stats_out=${tmp_bam_prefix}.flag_stats.txt
 wgs_metrics_out=${tmp_bam_prefix}.wgs_metrics.txt
 multiple_metrics_out=${tmp_bam_prefix}.multiple_metrics
 # secondary file: ${tmp_bam_prefix}.multiple_metrics.alignment_summary_metrics
-# secondary file: ${tmp_bam_prefix}.multiple_metrics..gc_bias.detail_metrics
-# secondary file: ${tmp_bam_prefix}.multiple_metrics..gc_bias.pdf
-# secondary file: ${tmp_bam_prefix}.multiple_metrics..gc_bias.summary_metrics
-# secondary file: ${tmp_bam_prefix}.multiple_metrics..insert_size_histogram.pdf
-# secondary file: ${tmp_bam_prefix}.multiple_metrics..insert_size_metrics
+# secondary file: ${tmp_bam_prefix}.multiple_metrics.gc_bias.detail_metrics
+# secondary file: ${tmp_bam_prefix}.multiple_metrics.gc_bias.pdf
+# secondary file: ${tmp_bam_prefix}.multiple_metrics.gc_bias.summary_metrics
+# secondary file: ${tmp_bam_prefix}.multiple_metrics.insert_size_histogram.pdf
+# secondary file: ${tmp_bam_prefix}.multiple_metrics.insert_size_metrics
 
 ## the log:
 samplelog=${tmp_bam_prefix}.eze_gatk_part_1_correct.log
