@@ -18,16 +18,19 @@ apt-get -yq install --no-install-recommends samtools=1.7-1
 
 # Install GATK 3.7
 curl -sSL 'https://software.broadinstitute.org/gatk/download/auth?package=GATK-archive&version=3.7-0-gcfedb67' > GenomeAnalysisTK.tar.bz2
-tar xjf GenomeAnalysisTK.tar.bz2 && rm GenomeAnalysisTK.tar.bz2
+tar xjf GenomeAnalysisTK.tar.bz2
+rm GenomeAnalysisTK.tar.bz2
 rm -r resources
 
 # Install Picard 2.0.1
 DEBIAN_FRONTEND=noninteractive apt-get -yq install --no-install-recommends ant git r-base
 curl -sSL https://github.com/broadinstitute/picard/archive/2.0.1.tar.gz > picard.tar.gz
-tar xzf picard.tar.gz && rm picard.tar.gz
+tar xzf picard.tar.gz
+rm picard.tar.gz
 cd picard-2.0.1
 curl -sSL https://github.com/samtools/htsjdk/archive/2.0.1.tar.gz > htsjdk.tar.gz
-tar xzf htsjdk.tar.gz && rm htsjdk.tar.gz
+tar xzf htsjdk.tar.gz
+rm htsjdk.tar.gz
 mv htsjdk-2.0.1 htsjdk
 ant clean all
 mv dist/picard.jar ../
