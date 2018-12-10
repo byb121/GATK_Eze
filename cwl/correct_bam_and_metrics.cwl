@@ -41,7 +41,7 @@ inputs:
 
   in_bam:
     type: File
-    doc: "input BAM to be converted to GATK ready format and collect metrics from"
+    doc: "input BAM to be converted to GATK ready format and to collect metrics from"
     inputBinding:
       position: 1
       shellQuote: true
