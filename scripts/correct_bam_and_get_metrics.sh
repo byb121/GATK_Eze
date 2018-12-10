@@ -85,6 +85,7 @@ java $java_mem_tag -Djava.io.tmpdir=/tmp \
 I=${tmp_bam_prefix}.md.bam \
 R=$path_ref \
 O=${tmp_bam_prefix}.clean.bam >> "$samplelog"
+rm ${tmp_bam_prefix}.md.bam
 echo "$(date '+%d/%m/%y_%H:%M:%S'),---Finished cleaning BAM---" >> "$samplelog"
 
 ####################################################
@@ -97,6 +98,7 @@ VALIDATION_STRINGENCY=LENIENT \
 I=${tmp_bam_prefix}.clean.bam \
 O=${tmp_bam_prefix}.fixed.bam \
 TMP_DIR=/tmp >> "$samplelog"
+rm ${tmp_bam_prefix}.clean.bam
 echo "$(date '+%d/%m/%y_%H:%M:%S'), Finished Picard FixMateInformation" >> "$samplelog"
 
 ####################################################
@@ -114,6 +116,7 @@ echo "$(date '+%d/%m/%y_%H:%M:%S'),---Starting Reformat header---" >> "$samplelo
 # && touch $root_folder/logs/part_1_Reformat_header_finished_$sample.txt
 
 samtools view -H ${tmp_bam_prefix}.fixed.bam | sed -e 's/PL:HiSeq/PL:illumina/g' | samtools reheader - ${tmp_bam_prefix}.fixed.bam > $reheadered_bam
+rm ${tmp_bam_prefix}.fixed.bam
 echo "$(date '+%d/%m/%y_%H:%M:%S'), Finished reformating header" >> "$samplelog"
 
 ####################################################
@@ -176,7 +179,6 @@ echo "$(date '+%d/%m/%y_%H:%M:%S'),---Collecting multiple metrics---" >> "$sampl
 
 java $java_mem_tag -Djava.io.tmpdir=/tmp \
 -jar $path_picard CollectMultipleMetrics \
-VALIDATION_STRINGENCY=LENIENT \
 R=$path_ref \
 I=$reheadered_bam \
 O=$multiple_metrics_out \
