@@ -28,8 +28,8 @@ mem=$3
 # untar ref
 mkdir -p ref
 tar xzf $sanger_core_ref -C ref --strip-components 1
-path_ref="ref/genome.fa"
 
+path_ref="ref/genome.fa"
 path_GATK="/opt/GenomeAnalysisTK.jar" # path to GATK jar
 path_picard="/opt/picard.jar" # path to Picardtools jar
 vcf_REF="/opt/Omni25_genotypes_1525_samples_v2.b37.PASS.ALL.sites.vcf"
