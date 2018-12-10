@@ -1,0 +1,4 @@
+GATK 3.7
+Picardtools 2.0.1
+VerifyBamID v1.1.2
+samtools 1.5

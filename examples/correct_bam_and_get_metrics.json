@@ -1,0 +1,35 @@
+{
+    "in_bam":{
+        "path": "http://ngs.sanger.ac.uk/production/cancer/dockstore/cgpwgs/sampled/COLO-829.bam",
+        "class": "File"
+    },
+    "sanger_core_ref":{
+        "path": "http://ftp.sanger.ac.uk/pub/cancer/dockstore/human/core_ref_GRCh37d5.tar.gz",
+        "class": "File"
+    },
+    "mem": 8,
+    "reheadered_bam": {
+        "path": "/tmp/reheadered_for_GATK.bam",
+        "class": "File"
+    },
+    "flag_stats_out": {
+        "path": "/tmp/reheadered_bam_flag_stats_out.txt",
+        "class": "File"
+    },
+    "wgs_metrics_out": {
+        "path": "/tmp/reheadered_bam_wgs_metrics_out.txt",
+        "class": "File"
+    },
+    "job_log": {
+        "path": "/tmp/correct_bam_get_metrics.job.log",
+        "class": "File"
+    },
+    "verifybamID_out": {
+        "path": "/tmp/reheadered_verifybamID_out",
+        "class": "Directory"
+    },
+    "multiple_metrics_out": {
+        "path": "/tmp/reheadered_multiple_metrics_out",
+        "class": "Directory"
+    }
+}
