@@ -29,7 +29,7 @@
         "class": "Directory"
     },
     "multiple_metrics_out": {
-        "path": "/tmp/multiple_metrics_out",
+        "path": "/tmp/reheadered_multiple_metrics_out",
         "class": "Directory"
     }
 }
