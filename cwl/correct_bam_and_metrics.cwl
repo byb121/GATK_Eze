@@ -30,7 +30,7 @@ dct:creator:
 
 requirements:
   - class: DockerRequirement
-    dockerPull: "quay.io/wtsicgp/gatk_eze:0.0.1"
+    dockerPull: "quay.io/wtsicgp/gatk_eze:0.0.2"
 
 hints:
   - class: ResourceRequirement
@@ -65,38 +65,38 @@ outputs:
   reheadered_bam:
     type: File
     outputBinding:
-      glob: $(inputs.in_bam.basename).reheader.bam
+      glob: $(inputs.in_bam.nameroot).reheader.bam
     secondaryFiles:
       .bai
 
   flag_stats_out:
     type: File
     outputBinding:
-      glob: $(inputs.in_bam.basename).flag_stats.txt
+      glob: $(inputs.in_bam.nameroot).flag_stats.txt
 
   wgs_metrics_out:
     type: File
     outputBinding:
-      glob: $(inputs.in_bam.basename).wgs_metrics.txt
+      glob: $(inputs.in_bam.nameroot).wgs_metrics.txt
 
   job_log:
     type: File
     outputBinding:
-      glob: $(inputs.in_bam.basename).eze_gatk_part_1_correct.log
+      glob: $(inputs.in_bam.nameroot).eze_gatk_part_1_correct.log
 
   verifybamID_out:
     type:
       type: array
       items: File
     outputBinding:
-      glob: "$(inputs.in_bam.basename).verifybamID_out.*"
+      glob: "$(inputs.in_bam.nameroot).verifybamID_out.*"
  
   multiple_metrics_out:
     type:
       type: array
       items: File
     outputBinding:
-      glob: "$(inputs.in_bam.basename).multiple_metrics.*"
+      glob: "$(inputs.in_bam.nameroot).multiple_metrics.*"
 
 baseCommand: ["correct_bam_and_get_metrics.sh"]
 
