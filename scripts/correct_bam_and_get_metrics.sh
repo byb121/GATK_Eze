@@ -68,6 +68,7 @@ echo "$(date '+%d/%m/%y_%H:%M:%S'), Wake up to work" > "$samplelog"
 echo "$(date '+%d/%m/%y_%H:%M:%S'),---Starting Picard MarkDuplicates---" >> "$samplelog"
 java $java_mem_tag -Djava.io.tmpdir=/tmp \
 -jar $path_picard MarkDuplicates \
+TMP_DIR=/tmp \
 I=$in_bam \
 O=${tmp_bam_prefix}.md.bam \
 M=${tmp_bam_prefix}.duplicate_metrics.txt \
@@ -82,6 +83,7 @@ echo "$(date '+%d/%m/%y_%H:%M:%S'),Finished Picard MarkDuplicates" >> "$samplelo
 echo "$(date '+%d/%m/%y_%H:%M:%S'),---Cleaning BAM---" >> "$samplelog"
 java $java_mem_tag -Djava.io.tmpdir=/tmp \
 -jar $path_picard CleanSam \
+TMP_DIR=/tmp \
 I=${tmp_bam_prefix}.md.bam \
 R=$path_ref \
 O=${tmp_bam_prefix}.clean.bam >> "$samplelog"
@@ -94,6 +96,7 @@ echo "$(date '+%d/%m/%y_%H:%M:%S'),---Finished cleaning BAM---" >> "$samplelog"
 echo "$(date '+%d/%m/%y_%H:%M:%S'),---Starting FixMateInformation---" >> "$samplelog"
 java $java_mem_tag -Djava.io.tmpdir=/tmp \
 -jar $path_picard FixMateInformation \
+TMP_DIR=/tmp \
 VALIDATION_STRINGENCY=LENIENT \
 I=${tmp_bam_prefix}.clean.bam \
 O=${tmp_bam_prefix}.fixed.bam \
@@ -132,6 +135,7 @@ echo "$(date '+%d/%m/%y_%H:%M:%S'), Finished generating BAM index" >> "$samplelo
 echo "$(date '+%d/%m/%y_%H:%M:%S'),---Validating BAM---" >> "$samplelog"
 java $java_mem_tag -Djava.io.tmpdir=/tmp \
 -jar $path_picard ValidateSamFile \
+TMP_DIR=/tmp \
 VALIDATION_STRINGENCY=LENIENT \
 I=$reheadered_bam \
 MODE=SUMMARY >> "$samplelog"
@@ -163,6 +167,7 @@ echo "$(date '+%d/%m/%y_%H:%M:%S'), Finished samtools flagstat" >> "$samplelog"
 echo "$(date '+%d/%m/%y_%H:%M:%S'),---Starting Picard CollectWgsMetrics---" >> "$samplelog"
 java $java_mem_tag -Djava.io.tmpdir=/tmp \
 -jar $path_picard CollectWgsMetrics \
+TMP_DIR=/tmp \
 VALIDATION_STRINGENCY=LENIENT \
 R=$path_ref \
 I=$reheadered_bam \
@@ -179,6 +184,7 @@ echo "$(date '+%d/%m/%y_%H:%M:%S'),---Collecting multiple metrics---" >> "$sampl
 
 java $java_mem_tag -Djava.io.tmpdir=/tmp \
 -jar $path_picard CollectMultipleMetrics \
+TMP_DIR=/tmp \
 R=$path_ref \
 I=$reheadered_bam \
 O=$multiple_metrics_out \
