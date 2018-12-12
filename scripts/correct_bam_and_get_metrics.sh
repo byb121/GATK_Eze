@@ -131,18 +131,6 @@ samtools index $reheadered_bam
 echo "$(date '+%d/%m/%y_%H:%M:%S'), Finished generating BAM index" >> "$samplelog"
 
 ####################################################
-# Validate BAM
-####################################################
-echo "$(date '+%d/%m/%y_%H:%M:%S'),---Validating BAM---" >> "$samplelog"
-java $java_mem_tag -Djava.io.tmpdir=/tmp \
--jar $path_picard ValidateSamFile \
-TMP_DIR=/tmp \
-VALIDATION_STRINGENCY=LENIENT \
-I=$reheadered_bam \
-MODE=SUMMARY >> "$samplelog"
-echo "$(date '+%d/%m/%y_%H:%M:%S'),---Finished BAM Validation---" >> "$samplelog"
-
-####################################################
 # verifyBamID
 ####################################################
 echo "$(date '+%d/%m/%y_%H:%M:%S'),---Starting VerifyBamID---" >> "$samplelog"
