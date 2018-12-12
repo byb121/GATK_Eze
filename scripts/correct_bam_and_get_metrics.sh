@@ -33,7 +33,8 @@ path_ref="ref/genome.fa"
 path_GATK="/opt/GenomeAnalysisTK.jar" # path to GATK jar
 path_picard="/opt/picard.jar" # path to Picardtools jar
 vcf_REF="/opt/Omni25_genotypes_1525_samples_v2.b37.PASS.ALL.sites.vcf"
-tmp_bam_prefix=${in_bam%.*}
+tmp_bam_prefix=$(basename $in_bam)
+tmp_bam_prefix=${tmp_bam_prefix%.*}  # remove the input bam extension
 
 java_mem_tag="-Xmx${mem}g"
 

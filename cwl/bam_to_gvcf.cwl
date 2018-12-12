@@ -118,7 +118,7 @@ outputs:
     outputBinding:
       glob: $(inputs.in_bam.nameroot).eze_gatk_part_2_bam2gvcf.log
 
-baseCommand: ["correct_bam_and_get_metrics.sh"]
+baseCommand: ["bam_to_gvcf.sh"]
 
 s:codeRepository: https://github.com/cancerit/GATK_Eze
 s:author:

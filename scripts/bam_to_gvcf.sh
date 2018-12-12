@@ -37,7 +37,8 @@ cp ref/genome.fa.dict ref/genome.dict
 
 this_gatk="java -Xmx${mem}g -Djava.io.tmpdir=/tmp -Djava.library.path=/tmp -jar /opt/GenomeAnalysisTK.jar -R ref/genome.fa"
 
-tmp_bam_prefix=${in_bam%.*}
+tmp_bam_prefix=$(basename $in_bam)
+tmp_bam_prefix=${tmp_bam_prefix%.*}  # remove the input bam extension
 
 samplelog=${tmp_bam_prefix}.eze_gatk_part_2_bam2gvcf.log
 echo "$(date '+%d/%m/%y_%H:%M:%S'), Wake up to work" > "$samplelog"
