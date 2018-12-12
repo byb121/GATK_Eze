@@ -97,7 +97,7 @@ outputs:
       type: array
       items: File
     outputBinding:
-      glob: $(inputs.in_bam.nameroot).recal.ba*
+      glob: $(inputs.in_bam.nameroot).recal.ba[mi]
 
   g_vcf:
     type: File
@@ -105,13 +105,6 @@ outputs:
       glob: $(inputs.in_bam.nameroot).g.vcf.gz
     secondaryFiles:
       - .tbi
-
-  bam_recalib_plots:
-    type:
-      type: array
-      items: File
-    outputBinding:
-      glob: "$(inputs.in_bam.nameroot).recal_plots.*"
 
   job_log:
     type: File
