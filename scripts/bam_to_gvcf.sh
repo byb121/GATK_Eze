@@ -85,40 +85,6 @@ time ($this_gatk \
 echo "$(date '+%d/%m/%y_%H:%M:%S'),---GATK PrintReads finished---" >> "$samplelog"
 
 ####################################################
-# GATK BQSR post
-# Count covariates in recal.BAM	to compare before/after recalibration
-####################################################
-echo "$(date '+%d/%m/%y_%H:%M:%S'),---Starting GATK BaseRecalibrator Post---" >> "$samplelog"
-
-time ($this_gatk \
--nct $cpu \
--T BaseRecalibrator \
--I $in_bam \
--knownSites $gatk_ref_bundle_dbsnp \
--knownSites $gatk_ref_bundle_mills_1000g_gold_indel \
--knownSites $gatk_ref_bundle_1000g_indel \
--BQSR ${tmp_bam_prefix}.recal_table \
--o ${tmp_bam_prefix}.recal_table_post) >> "$samplelog" 
-
-echo "$(date '+%d/%m/%y_%H:%M:%S'), Finished GATK BaseRecalibrator Post" >> "$samplelog"
-
-####################################################
-# GATK AnalyzeCovariates
-# Create a pdf plot to see the results of recalibration
-####################################################
-echo "$(date '+%d/%m/%y_%H:%M:%S'),---Starting GATK AnalyzeCovariates---" >> "$samplelog"
-
-time ($this_gatk \
--T AnalyzeCovariates \
--before ${tmp_bam_prefix}.recal_table \
--after ${tmp_bam_prefix}.recal_table_post \
--plots ${tmp_bam_prefix}.recal_plots.pdf \
--csv ${tmp_bam_prefix}.recal_plots.csv \
--l DEBUG ) >> "$samplelog"
-
-echo "$(date '+%d/%m/%y_%H:%M:%S'),---GATK AnalyzeCovariates finished---" >> "$samplelog"
-
-####################################################
 # Genotyping - HaplotypeCaller
 ####################################################
 echo "$(date '+%d/%m/%y_%H:%M:%S'),---Starting HaplotypeCaller---" >> "$samplelog"
