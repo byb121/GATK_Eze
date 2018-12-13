@@ -23,7 +23,7 @@ rm GenomeAnalysisTK.tar.bz2
 rm -r resources
 
 # Install Picard 2.0.1
-DEBIAN_FRONTEND=noninteractive apt-get -yq install --no-install-recommends ant git r-base
+DEBIAN_FRONTEND=noninteractive apt-get -yq install --no-install-recommends ant git r-base r-base-dev
 curl -sSL https://github.com/broadinstitute/picard/archive/2.0.1.tar.gz > picard.tar.gz
 tar xzf picard.tar.gz
 rm picard.tar.gz
@@ -46,3 +46,5 @@ curl -sSL http://csg.sph.umich.edu/kang/verifyBamID/download/Omni25_genotypes_15
 
 apt-get clean autoclean
 apt-get autoremove -y
+
+Rscript -e 'install.packages(c("ggplot2", "gplots", "reshape", "gsalib"))'  # for GATK to use
