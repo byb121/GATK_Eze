@@ -28,12 +28,13 @@ mem=$3
 # untar ref
 mkdir -p ref
 tar xzf $sanger_core_ref -C ref --strip-components 1
-path_ref="ref/genome.fa"
 
+path_ref="ref/genome.fa"
 path_GATK="/opt/GenomeAnalysisTK.jar" # path to GATK jar
 path_picard="/opt/picard.jar" # path to Picardtools jar
 vcf_REF="/opt/Omni25_genotypes_1525_samples_v2.b37.PASS.ALL.sites.vcf"
 tmp_bam_prefix=$(basename $in_bam)
+tmp_bam_prefix=${tmp_bam_prefix%.*}  # remove the input bam extension
 
 java_mem_tag="-Xmx${mem}g"
 
@@ -68,6 +69,7 @@ echo "$(date '+%d/%m/%y_%H:%M:%S'), Wake up to work" > "$samplelog"
 echo "$(date '+%d/%m/%y_%H:%M:%S'),---Starting Picard MarkDuplicates---" >> "$samplelog"
 java $java_mem_tag -Djava.io.tmpdir=/tmp \
 -jar $path_picard MarkDuplicates \
+TMP_DIR=/tmp \
 I=$in_bam \
 O=${tmp_bam_prefix}.md.bam \
 M=${tmp_bam_prefix}.duplicate_metrics.txt \
@@ -82,6 +84,7 @@ echo "$(date '+%d/%m/%y_%H:%M:%S'),Finished Picard MarkDuplicates" >> "$samplelo
 echo "$(date '+%d/%m/%y_%H:%M:%S'),---Cleaning BAM---" >> "$samplelog"
 java $java_mem_tag -Djava.io.tmpdir=/tmp \
 -jar $path_picard CleanSam \
+TMP_DIR=/tmp \
 I=${tmp_bam_prefix}.md.bam \
 R=$path_ref \
 O=${tmp_bam_prefix}.clean.bam >> "$samplelog"
@@ -94,6 +97,7 @@ echo "$(date '+%d/%m/%y_%H:%M:%S'),---Finished cleaning BAM---" >> "$samplelog"
 echo "$(date '+%d/%m/%y_%H:%M:%S'),---Starting FixMateInformation---" >> "$samplelog"
 java $java_mem_tag -Djava.io.tmpdir=/tmp \
 -jar $path_picard FixMateInformation \
+TMP_DIR=/tmp \
 VALIDATION_STRINGENCY=LENIENT \
 I=${tmp_bam_prefix}.clean.bam \
 O=${tmp_bam_prefix}.fixed.bam \
@@ -127,17 +131,6 @@ samtools index $reheadered_bam
 echo "$(date '+%d/%m/%y_%H:%M:%S'), Finished generating BAM index" >> "$samplelog"
 
 ####################################################
-# Validate BAM
-####################################################
-echo "$(date '+%d/%m/%y_%H:%M:%S'),---Validating BAM---" >> "$samplelog"
-java $java_mem_tag -Djava.io.tmpdir=/tmp \
--jar $path_picard ValidateSamFile \
-VALIDATION_STRINGENCY=LENIENT \
-I=$reheadered_bam \
-MODE=SUMMARY >> "$samplelog"
-echo "$(date '+%d/%m/%y_%H:%M:%S'),---Finished BAM Validation---" >> "$samplelog"
-
-####################################################
 # verifyBamID
 ####################################################
 echo "$(date '+%d/%m/%y_%H:%M:%S'),---Starting VerifyBamID---" >> "$samplelog"
@@ -163,6 +156,7 @@ echo "$(date '+%d/%m/%y_%H:%M:%S'), Finished samtools flagstat" >> "$samplelog"
 echo "$(date '+%d/%m/%y_%H:%M:%S'),---Starting Picard CollectWgsMetrics---" >> "$samplelog"
 java $java_mem_tag -Djava.io.tmpdir=/tmp \
 -jar $path_picard CollectWgsMetrics \
+TMP_DIR=/tmp \
 VALIDATION_STRINGENCY=LENIENT \
 R=$path_ref \
 I=$reheadered_bam \
@@ -179,6 +173,7 @@ echo "$(date '+%d/%m/%y_%H:%M:%S'),---Collecting multiple metrics---" >> "$sampl
 
 java $java_mem_tag -Djava.io.tmpdir=/tmp \
 -jar $path_picard CollectMultipleMetrics \
+TMP_DIR=/tmp \
 R=$path_ref \
 I=$reheadered_bam \
 O=$multiple_metrics_out \
