@@ -20,7 +20,7 @@ Dockerised version of Ezequiel Anokian's GATK pipeline for germline variants ana
 
 ### correct_bam_and_get_metrics
 
-This is part 1 of the whole pipeline, which mark duplicates, correct BAM header and produces various quality metrics.
+This is part 1 of the whole pipeline, which clean the and fix mate info in the BAM and produces various quality metrics.
 
 Details of inputs and outputs are in `cwl/correct_bam_and_get_metrics.json`.
 

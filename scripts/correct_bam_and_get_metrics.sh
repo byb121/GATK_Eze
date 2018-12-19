@@ -6,10 +6,8 @@ set -xueo pipefail
 # PART 1: From raw basecalls to GATK-ready reads
 ########################################################################################################
 ## Clean BAM
-#  - mark duplicates using Picard tools MarkDuplicates (removed)
 #  - CleanSam using Picard tools
 #  - FixMateInformation using Picard tools
-#  - reformat BAM header (HiSeq -> illumina)
 #  - ValidateSamFile using Picard tools
 #  - generate BAM index using samtools
 ## Metrics
@@ -41,8 +39,8 @@ java_mem_tag="-Xmx${mem}g"
 # expected outputs:
 
 ## bam and index
-reheadered_bam=${tmp_bam_prefix}.reheader.bam
-# secondary file: ${tmp_bam_prefix}.reheader.bam.bai
+mateinfo_fixed_bam=${tmp_bam_prefix}.mateinfo_fixed.bam
+# secondary file: ${tmp_bam_prefix}.mateinfo_fixed.bam.bai
 
 ## metrics_files
 verifybamID_out=${tmp_bam_prefix}.verifybamID_out
@@ -63,21 +61,6 @@ multiple_metrics_out=${tmp_bam_prefix}.multiple_metrics
 samplelog=${tmp_bam_prefix}.eze_gatk_part_1_correct.log
 echo "$(date '+%d/%m/%y_%H:%M:%S'), Wake up to work" > "$samplelog"
 
-###################################################
-# Mark Duplicates
-###################################################
-echo "$(date '+%d/%m/%y_%H:%M:%S'),---Starting Picard MarkDuplicates---" >> "$samplelog"
-java $java_mem_tag -Djava.io.tmpdir=/tmp \
--jar $path_picard MarkDuplicates \
-TMP_DIR=/tmp \
-I=$in_bam \
-O=${tmp_bam_prefix}.md.bam \
-M=${tmp_bam_prefix}.duplicate_metrics.txt \
-CREATE_INDEX=true \
-VALIDATION_STRINGENCY=SILENT \
-REMOVE_DUPLICATES=true >> "$samplelog"
-echo "$(date '+%d/%m/%y_%H:%M:%S'),Finished Picard MarkDuplicates" >> "$samplelog"
-
 ####################################################
 # Clean BAM
 ####################################################
@@ -85,10 +68,9 @@ echo "$(date '+%d/%m/%y_%H:%M:%S'),---Cleaning BAM---" >> "$samplelog"
 java $java_mem_tag -Djava.io.tmpdir=/tmp \
 -jar $path_picard CleanSam \
 TMP_DIR=/tmp \
-I=${tmp_bam_prefix}.md.bam \
+I=$in_bam \
 R=$path_ref \
 O=${tmp_bam_prefix}.clean.bam >> "$samplelog"
-rm ${tmp_bam_prefix}.md.bam
 echo "$(date '+%d/%m/%y_%H:%M:%S'),---Finished cleaning BAM---" >> "$samplelog"
 
 ####################################################
@@ -100,34 +82,16 @@ java $java_mem_tag -Djava.io.tmpdir=/tmp \
 TMP_DIR=/tmp \
 VALIDATION_STRINGENCY=LENIENT \
 I=${tmp_bam_prefix}.clean.bam \
-O=${tmp_bam_prefix}.fixed.bam \
+O=$mateinfo_fixed_bam \
 TMP_DIR=/tmp >> "$samplelog"
 rm ${tmp_bam_prefix}.clean.bam
 echo "$(date '+%d/%m/%y_%H:%M:%S'), Finished Picard FixMateInformation" >> "$samplelog"
 
 ####################################################
-# Reformat BAM header (PL: HiSeq -> illumina)
-####################################################
-echo "$(date '+%d/%m/%y_%H:%M:%S'),---Starting Reformat header---" >> "$samplelog"
-
-# NOTE:
-# if sample belongs to "Pilot - Multicentric" or "Pilot - Asian - Shanghai", it doesn't have PL info in the header at all, we'll have to add it instead of replacing value, using the following command:
-# samtools view -H $root_folder/input_bams/$sample.reheader.bam | sed -e 's/LB:/PL:illumina\tLB:/g' | samtools reheader - $root_folder/input_bams/$sample.reheader.bam > $root_folder/input_bams/$sample.reheader.with.PL.bam
-
-# to add PL:illumina to BAM header
-# samtools view -H $root_folder/input_bams/$sample.fixed.bam | sed -e 's/PU:/PL:illumina\tPU:/g' | samtools reheader - $root_folder/input_bams/$sample.fixed.bam > $root_folder/input_bams/$sample.reheader.bam \
-# && echo "$(date '+%d/%m/%y_%H:%M:%S'), Finished reformating header" >> "$samplelog" \
-# && touch $root_folder/logs/part_1_Reformat_header_finished_$sample.txt
-
-samtools view -H ${tmp_bam_prefix}.fixed.bam | sed -e 's/PL:HiSeq/PL:illumina/g' | samtools reheader - ${tmp_bam_prefix}.fixed.bam > $reheadered_bam
-rm ${tmp_bam_prefix}.fixed.bam
-echo "$(date '+%d/%m/%y_%H:%M:%S'), Finished reformating header" >> "$samplelog"
-
-####################################################
 # Generate BAM index
 ####################################################
 echo "$(date '+%d/%m/%y_%H:%M:%S'),---Generating BAM index---" >> "$samplelog"
-samtools index $reheadered_bam
+samtools index $mateinfo_fixed_bam
 echo "$(date '+%d/%m/%y_%H:%M:%S'), Finished generating BAM index" >> "$samplelog"
 
 ####################################################
@@ -136,7 +100,7 @@ echo "$(date '+%d/%m/%y_%H:%M:%S'), Finished generating BAM index" >> "$samplelo
 echo "$(date '+%d/%m/%y_%H:%M:%S'),---Starting VerifyBamID---" >> "$samplelog"
 verifyBamID \
 --vcf $vcf_REF \
---bam $reheadered_bam \
+--bam $mateinfo_fixed_bam \
 --out $verifybamID_out \
 --ignoreRG \
 --verbose >> "$samplelog"
@@ -146,7 +110,7 @@ echo "$(date '+%d/%m/%y_%H:%M:%S'), Finished VerifyBamID" >> "$samplelog"
 # SAM FILE FLAG STATISTICS (samtools flagstat)
 ####################################################
 echo "$(date '+%d/%m/%y_%H:%M:%S'),---Starting Samtools flagstat---" >> "$samplelog"
-samtools flagstat $reheadered_bam >> $flag_stats_out
+samtools flagstat $mateinfo_fixed_bam >> $flag_stats_out
 echo "$(date '+%d/%m/%y_%H:%M:%S'), Finished samtools flagstat" >> "$samplelog"
 
 ####################################################
@@ -159,7 +123,7 @@ java $java_mem_tag -Djava.io.tmpdir=/tmp \
 TMP_DIR=/tmp \
 VALIDATION_STRINGENCY=LENIENT \
 R=$path_ref \
-I=$reheadered_bam \
+I=$mateinfo_fixed_bam \
 O=$wgs_metrics_out \
 INCLUDE_BQ_HISTOGRAM=true >> "$samplelog"
 echo "$(date '+%d/%m/%y_%H:%M:%S'), Finished Picard CollectWgsMetrics" >> "$samplelog"
@@ -175,7 +139,7 @@ java $java_mem_tag -Djava.io.tmpdir=/tmp \
 -jar $path_picard CollectMultipleMetrics \
 TMP_DIR=/tmp \
 R=$path_ref \
-I=$reheadered_bam \
+I=$mateinfo_fixed_bam \
 O=$multiple_metrics_out \
 PROGRAM=null \
 PROGRAM=CollectAlignmentSummaryMetrics \

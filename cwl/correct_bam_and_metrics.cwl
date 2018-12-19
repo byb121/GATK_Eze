@@ -30,7 +30,7 @@ dct:creator:
 
 requirements:
   - class: DockerRequirement
-    dockerPull: "quay.io/wtsicgp/gatk_eze:0.0.2"
+    dockerPull: "quay.io/wtsicgp/gatk_eze:0.1.0"
 
 hints:
   - class: ResourceRequirement
@@ -65,7 +65,7 @@ outputs:
   reheadered_bam:
     type: File
     outputBinding:
-      glob: $(inputs.in_bam.nameroot).reheader.bam
+      glob: $(inputs.in_bam.nameroot).mateinfo_fixed.bam
     secondaryFiles:
       .bai
 
