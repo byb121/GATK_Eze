@@ -41,8 +41,6 @@ inputs:
 
   in_bam: # Need the index file!!!
     type: File
-    secondaryFiles:
-    - .bai
     doc: "input BAM"
     inputBinding:
       position: 1

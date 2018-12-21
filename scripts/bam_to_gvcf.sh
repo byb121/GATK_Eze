@@ -64,60 +64,6 @@ gvcf=${tmp_bam_prefix}.g.vcf.gz
 echo "$(date '+%d/%m/%y_%H:%M:%S'), Wake up to work" > "$samplelog"
 
 ####################################################
-# verifyBamID
-####################################################
-echo "$(date '+%d/%m/%y_%H:%M:%S'),---Starting VerifyBamID---" >> "$samplelog"
-time (verifyBamID \
---vcf $vcf_REF \
---bam $in_bam \
---out $verifybamID_out \
---ignoreRG \
---verbose) >> "$samplelog"
-echo "$(date '+%d/%m/%y_%H:%M:%S'), Finished VerifyBamID" >> "$samplelog"
-
-####################################################
-# SAM FILE FLAG STATISTICS (samtools flagstat)
-####################################################
-echo "$(date '+%d/%m/%y_%H:%M:%S'),---Starting Samtools flagstat---" >> "$samplelog"
-samtools flagstat $in_bam >> $flag_stats_out
-echo "$(date '+%d/%m/%y_%H:%M:%S'), Finished samtools flagstat" >> "$samplelog"
-
-####################################################
-# CollectWgsMetrics
-####################################################
-
-echo "$(date '+%d/%m/%y_%H:%M:%S'),---Starting Picard CollectWgsMetrics---" >> "$samplelog"
-time ($this_picard CollectWgsMetrics \
-VALIDATION_STRINGENCY=LENIENT \
-TMP_DIR=/tmp \
-R=$path_ref \
-I=$in_bam \
-O=$wgs_metrics_out \
-INCLUDE_BQ_HISTOGRAM=true) >> "$samplelog"
-echo "$(date '+%d/%m/%y_%H:%M:%S'), Finished Picard CollectWgsMetrics" >> "$samplelog"
-
-##################################################
-# Collect multiple metrics
-# Collect metrics on insert size, GC bias, alignment summary
-##################################################
-echo "$(date '+%d/%m/%y_%H:%M:%S'),---Collecting multiple metrics---" >> "$samplelog"
-
-time ($this_picard CollectMultipleMetrics \
-R=$path_ref \
-TMP_DIR=/tmp \
-I=$in_bam \
-O=$multiple_metrics_out \
-PROGRAM=null \
-PROGRAM=CollectAlignmentSummaryMetrics \
-PROGRAM=CollectInsertSizeMetrics \
-PROGRAM=CollectGcBiasMetrics \
-METRIC_ACCUMULATION_LEVEL=null \
-METRIC_ACCUMULATION_LEVEL=READ_GROUP \
-METRIC_ACCUMULATION_LEVEL=SAMPLE \
-VALIDATION_STRINGENCY=SILENT) >> "$samplelog"
-echo "$(date '+%d/%m/%y_%H:%M:%S'), Finished collecting multiple metrics" >> "$samplelog"
-
-####################################################
 # Clean BAM
 ####################################################
 echo "$(date '+%d/%m/%y_%H:%M:%S'),---Cleaning BAM---" >> "$samplelog"
@@ -148,6 +94,60 @@ echo "$(date '+%d/%m/%y_%H:%M:%S'), Finished Picard FixMateInformation" >> "$sam
 echo "$(date '+%d/%m/%y_%H:%M:%S'),---Generating BAM index---" >> "$samplelog"
 samtools index $mateinfo_fixed_bam
 echo "$(date '+%d/%m/%y_%H:%M:%S'), Finished generating BAM index" >> "$samplelog"
+
+####################################################
+# verifyBamID
+####################################################
+echo "$(date '+%d/%m/%y_%H:%M:%S'),---Starting VerifyBamID---" >> "$samplelog"
+time (verifyBamID \
+--vcf $vcf_REF \
+--bam $mateinfo_fixed_bam \
+--out $verifybamID_out \
+--ignoreRG \
+--verbose) >> "$samplelog"
+echo "$(date '+%d/%m/%y_%H:%M:%S'), Finished VerifyBamID" >> "$samplelog"
+
+####################################################
+# SAM FILE FLAG STATISTICS (samtools flagstat)
+####################################################
+echo "$(date '+%d/%m/%y_%H:%M:%S'),---Starting Samtools flagstat---" >> "$samplelog"
+samtools flagstat $mateinfo_fixed_bam >> $flag_stats_out
+echo "$(date '+%d/%m/%y_%H:%M:%S'), Finished samtools flagstat" >> "$samplelog"
+
+####################################################
+# CollectWgsMetrics
+####################################################
+
+echo "$(date '+%d/%m/%y_%H:%M:%S'),---Starting Picard CollectWgsMetrics---" >> "$samplelog"
+time ($this_picard CollectWgsMetrics \
+VALIDATION_STRINGENCY=LENIENT \
+TMP_DIR=/tmp \
+R=$path_ref \
+I=$mateinfo_fixed_bam \
+O=$wgs_metrics_out \
+INCLUDE_BQ_HISTOGRAM=true) >> "$samplelog"
+echo "$(date '+%d/%m/%y_%H:%M:%S'), Finished Picard CollectWgsMetrics" >> "$samplelog"
+
+##################################################
+# Collect multiple metrics
+# Collect metrics on insert size, GC bias, alignment summary
+##################################################
+echo "$(date '+%d/%m/%y_%H:%M:%S'),---Collecting multiple metrics---" >> "$samplelog"
+
+time ($this_picard CollectMultipleMetrics \
+R=$path_ref \
+TMP_DIR=/tmp \
+I=$mateinfo_fixed_bam \
+O=$multiple_metrics_out \
+PROGRAM=null \
+PROGRAM=CollectAlignmentSummaryMetrics \
+PROGRAM=CollectInsertSizeMetrics \
+PROGRAM=CollectGcBiasMetrics \
+METRIC_ACCUMULATION_LEVEL=null \
+METRIC_ACCUMULATION_LEVEL=READ_GROUP \
+METRIC_ACCUMULATION_LEVEL=SAMPLE \
+VALIDATION_STRINGENCY=SILENT) >> "$samplelog"
+echo "$(date '+%d/%m/%y_%H:%M:%S'), Finished collecting multiple metrics" >> "$samplelog"
 
 ########################################################################################################
 # preparing ref files for GATK to use
