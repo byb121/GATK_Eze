@@ -43,7 +43,7 @@ inputs:
     type: File
     secondaryFiles:
     - .bai
-    doc: "input BAM to be converted to GATK ready format and to collect metrics from"
+    doc: "input BAM"
     inputBinding:
       position: 1
       shellQuote: true
