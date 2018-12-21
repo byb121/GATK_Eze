@@ -1,5 +1,9 @@
 # Changes
 
+## 0.2.0
+
+* Merged Eze's part 1 (BAM metrics) and part 2 (BAM to GVCF) scripts in to one.
+
 ## 0.1.0
 
 * Assume input BAM are cgpmap outputs, so removed steps which mark duplicates and corrects platform info in header.

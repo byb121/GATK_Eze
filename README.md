@@ -16,20 +16,12 @@ Dockerised version of Ezequiel Anokian's GATK pipeline for germline variants ana
   * reshape `0.8.8`
   And their dependencies.
 
-## Packaged CWL tools
-
-### correct_bam_and_get_metrics
-
-This is part 1 of the whole pipeline, which clean the and fix mate info in the BAM and produces various quality metrics.
-
-Details of inputs and outputs are in `cwl/correct_bam_and_get_metrics.json`.
-
-***Note:*** The tool does **NOT** support multiple threading. 16GB of RAM should be ok for most of BAMs.
+## Packaged CWL tool
 
 ### bam_to_vcf
 
-This is part 2 of the whole pipeline, which recalibrate a BAM and generate gzip GVCF file from it.
+It produces various quality metrics from the input BAM, clean the BAM file and fix mate info of it, then recalibrates the BAM and generates a gzip GVCF file from it.
 
 Details of inputs and outputs are in `cwl/bam_to_gvcf.json`.
 
-***Note:*** Most of the processed in this tool support multiple threading, 8 cores should be enough for most of cases. Set a sensible amount of RAM accordingly.
+***Note:*** Only BAM recalibration and HaplotypCaller support multiple threading, 8 cores should be enough for most of cases. Set a sensible amount of RAM accordingly.

@@ -32,5 +32,21 @@
     "g_vcf": {
         "path": "/tmp/gvcf",
         "class": "File"
+    },
+    "flag_stats_out": {
+        "path": "/tmp/flag_stats_out.txt",
+        "class": "File"
+    },
+    "wgs_metrics_out": {
+        "path": "/tmp/wgs_metrics_out.txt",
+        "class": "File"
+    },
+    "verifybamID_out": {
+        "path": "/tmp/verifybamID_out",
+        "class": "Directory"
+    },
+    "multiple_metrics_out": {
+        "path": "/tmp/multiple_metrics_out",
+        "class": "Directory"
     }
 }
