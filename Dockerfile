@@ -7,10 +7,11 @@ USER root
 RUN adduser --disabled-password --gecos '' ubuntu && chsh -s /bin/bash && mkdir -p /home/ubuntu
 
 RUN mkdir -p /opt
-COPY scripts /opt/
 COPY build/build_base.sh /opt
 WORKDIR /opt
-RUN ./build_base.sh && chmod a+rx -R /opt && rm build_base.sh
+RUN ./build_base.sh && rm build_base.sh
+COPY scripts /opt
+RUN chmod a+rx -R /opt
 
 USER ubuntu
 ENV PATH "$PATH:/opt"
