@@ -24,10 +24,10 @@ cpu=$7
 # untar ref
 mkdir -p ref
 tar xzf $sanger_core_ref -C ref --strip-components 1
+path_ref=ref/genome.fa
 
-
-this_gatk="java -Xmx${mem}g -Djava.io.tmpdir=/tmp -Djava.library.path=/tmp -jar /opt/GenomeAnalysisTK.jar -R ref/genome.fa"
-this_picard="java -Xmx${mem}g -Djava.io.tmpdir=/tmp -jar /opt/picard.jar TMP_DIR=/tmp"
+this_gatk="java -Xmx${mem}g -Djava.io.tmpdir=/tmp -Djava.library.path=/tmp -jar /opt/GenomeAnalysisTK.jar -R $path_ref"
+this_picard="java -Xmx${mem}g -Djava.io.tmpdir=/tmp -jar /opt/picard.jar"
 
 tmp_bam_prefix=$(basename $in_bam)
 tmp_bam_prefix=${tmp_bam_prefix%.*}  # remove the input bam extension
@@ -89,6 +89,7 @@ echo "$(date '+%d/%m/%y_%H:%M:%S'), Finished samtools flagstat" >> "$samplelog"
 echo "$(date '+%d/%m/%y_%H:%M:%S'),---Starting Picard CollectWgsMetrics---" >> "$samplelog"
 time ($this_picard CollectWgsMetrics \
 VALIDATION_STRINGENCY=LENIENT \
+TMP_DIR=/tmp \
 R=$path_ref \
 I=$in_bam \
 O=$wgs_metrics_out \
@@ -103,6 +104,7 @@ echo "$(date '+%d/%m/%y_%H:%M:%S'),---Collecting multiple metrics---" >> "$sampl
 
 time ($this_picard CollectMultipleMetrics \
 R=$path_ref \
+TMP_DIR=/tmp \
 I=$in_bam \
 O=$multiple_metrics_out \
 PROGRAM=null \
@@ -122,6 +124,7 @@ echo "$(date '+%d/%m/%y_%H:%M:%S'),---Cleaning BAM---" >> "$samplelog"
 time ($this_picard CleanSam \
 I=$in_bam \
 R=$path_ref \
+TMP_DIR=/tmp \
 O=${tmp_bam_prefix}.clean.bam) >> "$samplelog"
 echo "$(date '+%d/%m/%y_%H:%M:%S'),---Finished cleaning BAM---" >> "$samplelog"
 
@@ -133,6 +136,7 @@ mateinfo_fixed_bam=${tmp_bam_prefix}.mateinfo_fixed.bam
 echo "$(date '+%d/%m/%y_%H:%M:%S'),---Starting FixMateInformation---" >> "$samplelog"
 time ($this_picard FixMateInformation \
 VALIDATION_STRINGENCY=LENIENT \
+TMP_DIR=/tmp \
 I=${tmp_bam_prefix}.clean.bam \
 O=$mateinfo_fixed_bam) >> "$samplelog"
 rm ${tmp_bam_prefix}.clean.bam
