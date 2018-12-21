@@ -30,7 +30,7 @@ dct:creator:
 
 requirements:
   - class: DockerRequirement
-    dockerPull: "quay.io/wtsicgp/gatk_eze:0.1.0"
+    dockerPull: "quay.io/wtsicgp/gatk_eze:0.2.0"
 
 hints:
   - class: ResourceRequirement
@@ -109,7 +109,31 @@ outputs:
   job_log:
     type: File
     outputBinding:
-      glob: $(inputs.in_bam.nameroot).eze_gatk_part_2_bam2gvcf.log
+      glob: $(inputs.in_bam.nameroot).bam2gvcf.log
+
+  flag_stats_out:
+    type: File
+    outputBinding:
+      glob: $(inputs.in_bam.nameroot).flag_stats.txt
+
+  wgs_metrics_out:
+    type: File
+    outputBinding:
+      glob: $(inputs.in_bam.nameroot).wgs_metrics.txt
+
+  verifybamID_out:
+    type:
+      type: array
+      items: File
+    outputBinding:
+      glob: "$(inputs.in_bam.nameroot).verifybamID_out.*"
+ 
+  multiple_metrics_out:
+    type:
+      type: array
+      items: File
+    outputBinding:
+      glob: "$(inputs.in_bam.nameroot).multiple_metrics.*"
 
 baseCommand: ["bam_to_gvcf.sh"]
 

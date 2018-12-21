@@ -1,23 +1,15 @@
 #!/bin/bash
 
-set -xue
+set -xueo pipefail
 
 ########################################################################################################
-# PART 2: From raw basecalls to GATK-ready reads
+# the script does the following
 ########################################################################################################
-
+## Clean BAM
+## Produce etrics
 ## Recalibration
-#  - GATK BQSR (Base Quality Score Recalibration) using BaseRecalibrator
-#  - GATK PrintReads
-#  - GATK BQSR (Base Quality Score Recalibration) using BaseRecalibrator
-#  - GATK AnalyzeCovariates
 ## Variant Calling
-#  - GATK HaplotypeCaller
-#  - bgzip + tabix .g.vcf
-#  - GATK ValidateVariants
-## File cleanup
-#  - file cleanup
-
+########################################################################################################
 ########################################################################################################
 
 in_bam=$1
@@ -32,16 +24,133 @@ cpu=$7
 # untar ref
 mkdir -p ref
 tar xzf $sanger_core_ref -C ref --strip-components 1
-# just because GATK does not think genome.fa.dict is the dict file name!!
-cp ref/genome.fa.dict ref/genome.dict
+
 
 this_gatk="java -Xmx${mem}g -Djava.io.tmpdir=/tmp -Djava.library.path=/tmp -jar /opt/GenomeAnalysisTK.jar -R ref/genome.fa"
+this_picard="java -Xmx${mem}g -Djava.io.tmpdir=/tmp -jar /opt/picard.jar TMP_DIR=/tmp"
 
 tmp_bam_prefix=$(basename $in_bam)
 tmp_bam_prefix=${tmp_bam_prefix%.*}  # remove the input bam extension
 
-samplelog=${tmp_bam_prefix}.eze_gatk_part_2_bam2gvcf.log
+vcf_REF="/opt/Omni25_genotypes_1525_samples_v2.b37.PASS.ALL.sites.vcf"
+
+# expected outputs:
+
+## metrics_files
+verifybamID_out=${tmp_bam_prefix}.verifybamID_out
+# secondary file: ${tmp_bam_prefix}.verifybamID_out.depthSM
+# secondary file: ${tmp_bam_prefix}.verifybamID_out.log
+# secondary file: ${tmp_bam_prefix}.verifybamID_out.selfSM
+flag_stats_out=${tmp_bam_prefix}.flag_stats.txt
+wgs_metrics_out=${tmp_bam_prefix}.wgs_metrics.txt
+multiple_metrics_out=${tmp_bam_prefix}.multiple_metrics
+# secondary file: ${tmp_bam_prefix}.multiple_metrics.alignment_summary_metrics
+# secondary file: ${tmp_bam_prefix}.multiple_metrics.gc_bias.detail_metrics
+# secondary file: ${tmp_bam_prefix}.multiple_metrics.gc_bias.pdf
+# secondary file: ${tmp_bam_prefix}.multiple_metrics.gc_bias.summary_metrics
+# secondary file: ${tmp_bam_prefix}.multiple_metrics.insert_size_histogram.pdf
+# secondary file: ${tmp_bam_prefix}.multiple_metrics.insert_size_metrics
+
+samplelog=${tmp_bam_prefix}.bam2gvcf.log
+
+## bam and index
+recalibrated_bam=${tmp_bam_prefix}.recal.bam
+# index ${tmp_bam_prefix}.recal.bai
+
+## GVCF 
+gvcf=${tmp_bam_prefix}.g.vcf.gz
+# its index ${tmp_bam_prefix}.g.vcf.gz.tbi
+
 echo "$(date '+%d/%m/%y_%H:%M:%S'), Wake up to work" > "$samplelog"
+
+####################################################
+# verifyBamID
+####################################################
+echo "$(date '+%d/%m/%y_%H:%M:%S'),---Starting VerifyBamID---" >> "$samplelog"
+time (verifyBamID \
+--vcf $vcf_REF \
+--bam $in_bam \
+--out $verifybamID_out \
+--ignoreRG \
+--verbose) >> "$samplelog"
+echo "$(date '+%d/%m/%y_%H:%M:%S'), Finished VerifyBamID" >> "$samplelog"
+
+####################################################
+# SAM FILE FLAG STATISTICS (samtools flagstat)
+####################################################
+echo "$(date '+%d/%m/%y_%H:%M:%S'),---Starting Samtools flagstat---" >> "$samplelog"
+samtools flagstat $in_bam >> $flag_stats_out
+echo "$(date '+%d/%m/%y_%H:%M:%S'), Finished samtools flagstat" >> "$samplelog"
+
+####################################################
+# CollectWgsMetrics
+####################################################
+
+echo "$(date '+%d/%m/%y_%H:%M:%S'),---Starting Picard CollectWgsMetrics---" >> "$samplelog"
+time ($this_picard CollectWgsMetrics \
+VALIDATION_STRINGENCY=LENIENT \
+R=$path_ref \
+I=$in_bam \
+O=$wgs_metrics_out \
+INCLUDE_BQ_HISTOGRAM=true) >> "$samplelog"
+echo "$(date '+%d/%m/%y_%H:%M:%S'), Finished Picard CollectWgsMetrics" >> "$samplelog"
+
+##################################################
+# Collect multiple metrics
+# Collect metrics on insert size, GC bias, alignment summary
+##################################################
+echo "$(date '+%d/%m/%y_%H:%M:%S'),---Collecting multiple metrics---" >> "$samplelog"
+
+time ($this_picard CollectMultipleMetrics \
+R=$path_ref \
+I=$in_bam \
+O=$multiple_metrics_out \
+PROGRAM=null \
+PROGRAM=CollectAlignmentSummaryMetrics \
+PROGRAM=CollectInsertSizeMetrics \
+PROGRAM=CollectGcBiasMetrics \
+METRIC_ACCUMULATION_LEVEL=null \
+METRIC_ACCUMULATION_LEVEL=READ_GROUP \
+METRIC_ACCUMULATION_LEVEL=SAMPLE \
+VALIDATION_STRINGENCY=SILENT) >> "$samplelog"
+echo "$(date '+%d/%m/%y_%H:%M:%S'), Finished collecting multiple metrics" >> "$samplelog"
+
+####################################################
+# Clean BAM
+####################################################
+echo "$(date '+%d/%m/%y_%H:%M:%S'),---Cleaning BAM---" >> "$samplelog"
+time ($this_picard CleanSam \
+I=$in_bam \
+R=$path_ref \
+O=${tmp_bam_prefix}.clean.bam) >> "$samplelog"
+echo "$(date '+%d/%m/%y_%H:%M:%S'),---Finished cleaning BAM---" >> "$samplelog"
+
+####################################################
+# FixMateInformation
+####################################################
+mateinfo_fixed_bam=${tmp_bam_prefix}.mateinfo_fixed.bam
+
+echo "$(date '+%d/%m/%y_%H:%M:%S'),---Starting FixMateInformation---" >> "$samplelog"
+time ($this_picard FixMateInformation \
+VALIDATION_STRINGENCY=LENIENT \
+I=${tmp_bam_prefix}.clean.bam \
+O=$mateinfo_fixed_bam) >> "$samplelog"
+rm ${tmp_bam_prefix}.clean.bam
+echo "$(date '+%d/%m/%y_%H:%M:%S'), Finished Picard FixMateInformation" >> "$samplelog"
+
+####################################################
+# Generate BAM index
+####################################################
+echo "$(date '+%d/%m/%y_%H:%M:%S'),---Generating BAM index---" >> "$samplelog"
+samtools index $mateinfo_fixed_bam
+echo "$(date '+%d/%m/%y_%H:%M:%S'), Finished generating BAM index" >> "$samplelog"
+
+########################################################################################################
+# preparing ref files for GATK to use
+########################################################################################################
+
+# just because GATK does not think genome.fa.dict is the dict file name!!
+cp ref/genome.fa.dict ref/genome.dict
 
 echo "$(date '+%d/%m/%y_%H:%M:%S'), preparing GATK bundle files" > "$samplelog"
 gatk_ref_bundle_dbsnp="ref/gatk_ref_bundle_dbsnp.vcf"
@@ -61,7 +170,7 @@ echo "$(date '+%d/%m/%y_%H:%M:%S'),---Starting GATK BaseRecalibrator Pre---" >> 
 time ($this_gatk \
 -nct $cpu \
 -T BaseRecalibrator \
--I $in_bam \
+-I $mateinfo_fixed_bam \
 -knownSites $gatk_ref_bundle_dbsnp \
 -knownSites $gatk_ref_bundle_mills_1000g_gold_indel \
 -knownSites $gatk_ref_bundle_1000g_indel \
@@ -78,11 +187,12 @@ echo "$(date '+%d/%m/%y_%H:%M:%S'),---Starting GATK PrintReads---" >> "$samplelo
 time ($this_gatk \
 -nct $cpu \
 -T PrintReads \
--I $in_bam \
+-I $mateinfo_fixed_bam \
 -BQSR ${tmp_bam_prefix}.recal_table \
--o ${tmp_bam_prefix}.recal.bam) >> "$samplelog"
+-o $recalibrated_bam) >> "$samplelog"
 
 echo "$(date '+%d/%m/%y_%H:%M:%S'),---GATK PrintReads finished---" >> "$samplelog"
+rm $mateinfo_fixed_bam
 
 ####################################################
 # Genotyping - HaplotypeCaller
@@ -91,10 +201,10 @@ echo "$(date '+%d/%m/%y_%H:%M:%S'),---Starting HaplotypeCaller---" >> "$samplelo
 time ($this_gatk \
 -nct $cpu \
 -T HaplotypeCaller \
--I ${tmp_bam_prefix}.recal.bam \
+-I $recalibrated_bam \
 --emitRefConfidence GVCF \
 --dbsnp $gatk_ref_bundle_dbsnp \
--o ${tmp_bam_prefix}.g.vcf.gz \
+-o $gvcf \
 -pairHMM VECTOR_LOGLESS_CACHING ) >> "$samplelog"
 
 echo "$(date '+%d/%m/%y_%H:%M:%S'),---Finished HaplotypeCaller---" >> "$samplelog"
@@ -105,7 +215,7 @@ echo "$(date '+%d/%m/%y_%H:%M:%S'),---Finished HaplotypeCaller---" >> "$samplelo
 echo "$(date '+%d/%m/%y_%H:%M:%S'),---Starting GVCF validation after HaplotypeCaller---" >> "$samplelog"
 time ($this_gatk \
 -T ValidateVariants \
--V ${tmp_bam_prefix}.g.vcf.gz \
+-V $gvcf \
 --validationTypeToExclude ALL ) >> "$samplelog"
 
 echo "$(date '+%d/%m/%y_%H:%M:%S'),---GVCF validation after HaplotypeCaller COMPLETED---">> "$samplelog"
