@@ -212,6 +212,7 @@ time ($this_gatk \
 -pairHMM VECTOR_LOGLESS_CACHING ) >> "$samplelog"
 
 echo "$(date '+%d/%m/%y_%H:%M:%S'),---Finished HaplotypeCaller---" >> "$samplelog"
+rm $recalibrated_bam
 
 ####################################################
 # Check the validity of the g.vcf.gz file
