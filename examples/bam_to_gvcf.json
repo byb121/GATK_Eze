@@ -21,10 +21,6 @@
     },
     "mem": 20,
     "cpu": 8,
-    "recalibrated_bam": {
-        "path": "/tmp/recalibrated_bam",
-        "class": "Directory"
-    },
     "job_log": {
         "path": "/tmp/bam_to_gvcf.job.log",
         "class": "File"

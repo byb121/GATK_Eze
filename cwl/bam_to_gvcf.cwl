@@ -30,7 +30,7 @@ dct:creator:
 
 requirements:
   - class: DockerRequirement
-    dockerPull: "quay.io/wtsicgp/gatk_eze:0.2.0"
+    dockerPull: "quay.io/wtsicgp/gatk_eze:0.2.1"
 
 hints:
   - class: ResourceRequirement
@@ -89,13 +89,6 @@ inputs:
       position: 7
 
 outputs:
-
-  recalibrated_bam:
-    type:
-      type: array
-      items: File
-    outputBinding:
-      glob: $(inputs.in_bam.nameroot).recal.ba[mi]
 
   g_vcf:
     type: File

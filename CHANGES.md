@@ -1,5 +1,9 @@
 # Changes
 
+## 0.2.1
+
+* Removed recalibrated BAM output.
+
 ## 0.2.0
 
 * Merged Eze's part 1 (BAM metrics) and part 2 (BAM to GVCF) scripts in to one.
