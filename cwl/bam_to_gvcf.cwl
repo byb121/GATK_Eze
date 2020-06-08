@@ -30,7 +30,7 @@ dct:creator:
 
 requirements:
   - class: DockerRequirement
-    dockerPull: "quay.io/wtsicgp/gatk_eze:0.2.1"
+    dockerPull: "quay.io/wtsicgp/gatk_eze:0.2.2"
 
 hints:
   - class: ResourceRequirement
